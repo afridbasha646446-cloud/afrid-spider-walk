@@ -1,0 +1,307 @@
+   <!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<title>Spider game</title>  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  <style>  
+html,body{  
+  margin:0;  
+  padding:0;  
+  background:#000;  
+  overflow:hidden;  
+}  
+canvas{  
+  display:block;  
+}  
+  
+/* ===== GO BACK BUTTON ===== */  
+#goBackBtn{  
+  position: fixed;  
+  top: 70%;  
+  left: 50%;  
+  transform: translate(-50%, -50%);  
+  padding: 14px 24px;  
+  font-size: 18px;  
+  border: none;  
+  border-radius: 10px;  
+  background: #ff4444;  
+  color: #fff;  
+  cursor: pointer;  
+  display: none;  
+  z-index: 2000;  
+}  
+#goBackBtn:active{  
+  transform: translate(-50%, -50%) scale(0.95);  
+}  
+  
+/* ===== JOYSTICK ===== */  
+#joystick{  
+  position: fixed;  
+  bottom: 30px;  
+  left: 50%;  
+  width: 120px;  
+  height: 120px;  
+  border-radius: 50%;  
+  background: rgba(255,255,255,0.08);  
+  display: none;  
+  touch-action: none;  
+  transform: translateX(-50%);  
+}  
+#stick{  
+  position: absolute;  
+  width: 50px;  
+  height: 50px;  
+  background: #fff;  
+  border-radius: 50%;  
+  left: 35px;  
+  top: 35px;  
+}  
+  
+/* ===== RESTART BUTTON ===== */  
+#restartBtn{  
+  position: fixed;  
+  top: 60%;  
+  left: 50%;  
+  transform: translate(-50%, -50%);  
+  padding: 15px 30px;  
+  font-size: 20px;  
+  background: #fff;  
+  color: #000;  
+  border: none;  
+  border-radius: 10px;  
+  cursor: pointer;  
+  display: none;  
+  z-index: 10;  
+}  
+</style>  </head>  <body>  <canvas id="c"></canvas>
+
+<!-- Joystick -->  <div id="joystick"><div id="stick"></div></div>  <!-- Buttons -->  <button id="restartBtn">Restart</button>
+<button id="goBackBtn">Go Back</button>
+
+<script>  
+/* ===== SETTINGS ===== */  
+const controlType = localStorage.getItem("controlType") || "touch";  
+  
+/* ================= CANVAS ================= */  
+const canvas = document.getElementById("c");  
+const ctx = canvas.getContext("2d");  
+  
+function resize(){  
+  canvas.width = innerWidth;  
+  canvas.height = innerHeight;  
+}  
+resize();  
+addEventListener("resize", resize);  
+  
+/* ================= INPUT ================= */  
+let target = { x: canvas.width/2, y: canvas.height/2 };  
+  
+addEventListener("mousemove", e=>{  
+  if(controlType!=="joystick"){  
+    target.x = e.clientX;  
+    target.y = e.clientY;  
+  }  
+});  
+  
+addEventListener("touchmove", e=>{  
+  if(controlType!=="joystick"){  
+    target.x = e.touches[0].clientX;  
+    target.y = e.touches[0].clientY;  
+  }  
+});  
+  
+/* ================= JOYSTICK ================= */  
+const joystick = document.getElementById("joystick");  
+const stick = document.getElementById("stick");  
+  
+let joy = {x:0,y:0};  
+let joyActive=false;  
+let joyCenter={x:0,y:0};  
+  
+if(controlType==="joystick"){  
+  joystick.style.display="block";  
+}  
+  
+joystick.addEventListener("touchstart", e=>{  
+  joyActive=true;  
+  const t=e.touches[0];  
+  joyCenter.x=t.clientX;  
+  joyCenter.y=t.clientY;  
+});  
+  
+joystick.addEventListener("touchmove", e=>{  
+  if(!joyActive) return;  
+  const t=e.touches[0];  
+  let dx=t.clientX-joyCenter.x;  
+  let dy=t.clientY-joyCenter.y;  
+  const dist=Math.min(50,Math.hypot(dx,dy));  
+  const ang=Math.atan2(dy,dx);  
+  joy.x=Math.cos(ang)*(dist/40);  
+  joy.y=Math.sin(ang)*(dist/40);  
+  stick.style.left=35+joy.x*50+"px";  
+  stick.style.top =35+joy.y*50+"px";  
+});  
+  
+joystick.addEventListener("touchend", ()=>{  
+  joyActive=false;  
+  joy.x=joy.y=0;  
+  stick.style.left="35px";  
+  stick.style.top ="35px";  
+});  
+  
+/* ================= SPIDER ================= */  
+const spider = {  
+  x: target.x,  
+  y: target.y,  
+  vx:0, vy:0,  
+  phase:0,  
+  legs:[]  
+};  
+  
+const LEG_COUNT = 8;  
+for(let i=0;i<LEG_COUNT;i++){  
+  const a = (Math.PI*2/LEG_COUNT)*i;  
+  spider.legs.push({  
+    angle:a,  
+    foot:{x:spider.x,y:spider.y},  
+    stepping:false,  
+    t:1,  
+    group:i%2  
+  });  
+}  
+  
+function updateSpider(){  
+  if(controlType==="joystick"){  
+    spider.vx += joy.x*2.0;  
+    spider.vy += joy.y*2.0;  
+  }else{  
+    spider.vx += (target.x - spider.x)*0.04;  
+    spider.vy += (target.y - spider.y)*0.04;  
+  }  
+  
+  spider.vx *= 0.75;  
+  spider.vy *= 0.75;  
+  
+  spider.x += spider.vx;  
+  spider.y += spider.vy;  
+  
+  spider.x = Math.max(20, Math.min(canvas.width-20, spider.x));  
+  spider.y = Math.max(20, Math.min(canvas.height-20, spider.y));  
+  
+  const speed = Math.hypot(spider.vx, spider.vy);  
+  spider.phase += 0.05 + speed*0.02;  
+  
+  spider.legs.forEach(leg=>{  
+    const homeX = spider.x + Math.cos(leg.angle)*28;  
+    const homeY = spider.y + Math.sin(leg.angle)*28;  
+  
+    if(!leg.stepping && leg.group === Math.floor(spider.phase)%2){  
+      const d = Math.hypot(homeX-leg.foot.x, homeY-leg.foot.y);  
+      if(d > 12){  
+        leg.stepping = true;  
+        leg.t = 0;  
+      }  
+    }  
+  
+    if(leg.stepping){  
+      leg.t += 0.12;  
+      const t = Math.min(leg.t,1);  
+      const lift = Math.sin(t*Math.PI)*8;  
+      leg.foot.x = leg.foot.x*(1-t) + homeX*t;  
+      leg.foot.y = leg.foot.y*(1-t) + (homeY-lift)*t;  
+      if(t>=1) leg.stepping=false;  
+    }  
+  });  
+}  
+  
+function drawSpider(){  
+  ctx.strokeStyle="#fff";  
+  ctx.lineWidth=2;  
+  spider.legs.forEach(leg=>{  
+    const bx = spider.x + Math.cos(leg.angle)*6;  
+    const by = spider.y + Math.sin(leg.angle)*6;  
+    ctx.beginPath();  
+    ctx.moveTo(bx,by);  
+    ctx.lineTo(leg.foot.x, leg.foot.y);  
+    ctx.stroke();  
+  });  
+  ctx.fillStyle="#fff";  
+  ctx.beginPath();  
+  ctx.arc(spider.x, spider.y, 8, 0, Math.PI*2);  
+  ctx.fill();  
+}  
+  
+/* ================= FOOD ================= */  
+let food = {x:100,y:100,r:6};  
+function respawnFood(){  
+  food.x = 30 + Math.random()*(canvas.width-60);  
+  food.y = 30 + Math.random()*(canvas.height-60);  
+}  
+function drawFood(){  
+  ctx.fillStyle="#0f0";  
+  ctx.beginPath();  
+  ctx.arc(food.x, food.y, food.r, 0, Math.PI*2);  
+  ctx.fill();  
+}  
+function checkFoodCollision(){  
+  if(Math.hypot(spider.x-food.x, spider.y-food.y)<food.r+10){  
+    score+=5;  
+    respawnFood();  
+  }  
+}  
+  
+/* ================= BLOCKS ================= */  
+let blocks=[],lastSpawn=0,score=0,gameOver=false;  
+function spawnBlock(){  
+  const s=[{w:40,h:40},{w:80,h:30},{w:30,h:90}][Math.random()*3|0];  
+  blocks.push({x:Math.random()*(canvas.width-s.w),y:-s.h,w:s.w,h:s.h,speed:1+Math.random()*1.2});  
+}  
+function updateBlocks(){  
+  for(let i=blocks.length-1;i>=0;i--){  
+    const b=blocks[i];  
+    b.y+=b.speed;  
+    if(Math.abs(spider.x-(b.x+b.w/2))<b.w/2+12 &&  
+       Math.abs(spider.y-(b.y+b.h/2))<b.h/2+12) gameOver=true;  
+    if(b.y>canvas.height){blocks.splice(i,1);score++;}  
+  }  
+}  
+function drawBlocks(){  
+  ctx.fillStyle="#555";  
+  blocks.forEach(b=>ctx.fillRect(b.x,b.y,b.w,b.h));  
+}  
+  
+/* ================= BUTTONS ================= */  
+const restartBtn = document.getElementById("restartBtn");  
+const goBackBtn = document.getElementById("goBackBtn");  
+  
+restartBtn.onclick = ()=> location.reload();  
+goBackBtn.onclick = ()=> window.location.href = "entry page.html";  
+  
+/* ================= LOOP ================= */  
+function loop(t){  
+  ctx.clearRect(0,0,canvas.width,canvas.height);  
+  if(!gameOver){  
+    restartBtn.style.display="none";  
+    goBackBtn.style.display="none";  
+    updateSpider();  
+    updateBlocks();  
+    checkFoodCollision();  
+    if(t-lastSpawn>1400){spawnBlock();lastSpawn=t;}  
+    drawFood(); drawBlocks(); drawSpider();  
+    ctx.fillStyle="#fff";  
+    ctx.font="18px Arial";  
+    ctx.fillText("Score: "+score,20,30);  
+  }else{  
+    restartBtn.style.display="block";  
+    goBackBtn.style.display="block";  
+    ctx.fillStyle="rgba(0,0,0,0.75)";  
+    ctx.fillRect(0,0,canvas.width,canvas.height);  
+    ctx.fillStyle="#fff";  
+    ctx.font="bold 42px Arial";  
+    ctx.textAlign="center";  
+    ctx.fillText("GAME OVER",canvas.width/2,canvas.height/2);  
+  }  
+  requestAnimationFrame(loop);  
+}  
+requestAnimationFrame(loop);  
+</script>  </body>  
+</html>  

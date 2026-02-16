@@ -1,0 +1,153 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spider Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.owner-name{
+  position: fixed;
+  bottom: 8px;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+  font-family: Arial, sans-serif;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.footer-info{
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  pointer-events: none;
+}
+
+.company-name{
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 2px;
+}
+
+.owner-name{
+  font-size: 11px;
+  color: #aaa;
+  opacity: 0.85;
+}
+body{
+  height:100vh;
+  background: radial-gradient(circle at top, #111, #000);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+}
+
+.container{
+  text-align:center;
+  animation: fadeIn 1.2s ease;
+}
+
+.spider{
+  font-size:3rem;
+  margin-bottom:20px;
+  animation: bounce 2s infinite;
+}
+
+h1{
+  font-size:2.5rem;
+  letter-spacing:2px;
+  margin-bottom:10px;
+}
+
+p{
+  opacity:0.8;
+  margin-bottom:30px;
+}
+
+.menu{
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+button{
+  padding:14px 38px;
+  font-size:1.05rem;
+  border:none;
+  border-radius:30px;
+  background:#fff;
+  color:#000;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.08);
+  background:#eaeaea;
+}
+
+.secondary{
+  background:#222;
+  color:#fff;
+}
+
+.secondary:hover{
+  background:#333;
+}
+
+@keyframes bounce{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-12px); }
+}
+
+@keyframes fadeIn{
+  from{ opacity:0; transform:scale(0.95); }
+  to{ opacity:1; transform:scale(1); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="spider">🕷️</div>
+  <h1>SPIDER WALK</h1>
+  <p>Move • Walk • Survive</p>
+
+  <div class="menu">
+    <button onclick="startGame()">START GAME</button>
+    <button class="secondary" onclick="openSpiders()">SPIDERS</button>
+    <button class="secondary" onclick="openSettings()">SETTINGS</button>
+  </div>
+</div>
+<script>
+function startGame(){
+  // connect to your actual game file
+  window.location.href = "spidergame.html";
+}
+
+
+function openSettings(){
+  window.location.href = "settings.html";
+}
+</script>"
+<div class="owner-name">
+  Owner: Afrid Basha Dudekula
+</div>
+<div class="footer-info">
+  <div class="company-name">company name:SIB SAB</div>
+  <div class="owner-name">Owner: Afrid Basha Dudekula</div>
+</div>
+</body>
+</html>
